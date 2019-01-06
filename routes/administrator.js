@@ -227,75 +227,36 @@ router.get('/getGroup',(req, res, next) => {
 /* 方法：post */
 /* 参数：很多*/
 router.post('/inviteUser', (req, res, next) => {
-  if(req.cookies.clockLogin){
-    var promise = Administrator.findOne({'_id': mongoose.Types.ObjectId(req.cookies.clockLogin)}).exec();
-    promise.then( (result) => {
-      var iniMsgDoc = new InitiativeMsg({
-        passivityMsgId: '',
-        administratorId: req.cookies.clockLogin,
-        administratorName: result.name,
-        userId: req.body.userId,
-        userName: req.body.userName,
-        userPhone: req.body.userPhone,
-        departmentId: req.body.departmentId,
-        departmentName: req.body.departmentName,
-        date: new Date,
-        type: -1
-      });
-      iniMsgDoc.save( (err,doc) => {
-        if(err){
-          res.json({
-              'status': '-1',
-              'msg': '信息插入异常',
-              'result': ''
-            });
-        };
-      });
-      return  {'administratorName': iniMsgDoc.administratorName,'initiativeMsgId': mongoose.Types.ObjectId(iniMsgDoc._id).toString()};
-    }).then( (result) => {
-      var passMsgDoc = new PassivityMsg({
-        initiativeMsgId: result.initiativeMsgId,
-        administratorId: req.cookies.clockLogin,
-        administratorName: result.administratorName,
-        userId: req.body.userId,
-        userName: req.body.userName,
-        userPhone: req.body.userPhone,
-        departmentId: req.body.departmentId,
-        departmentName: req.body.departmentName,
-        date: new Date,
-        type: -1
-      });
-      // 这里不知道什么原因，第三个then运行在第二个then之前，所以使用了地狱嵌套
-      passMsgDoc.save( (err,doc) => {
-        if(err){
-          res.json({
-            'status': '-1',
-            'msg': '信息插入异常',
-            'result': ''
-          })
-        }else{
-           InitiativeMsg.updateOne({
-              '_id': mongoose.Types.ObjectId(result.initiativeMsgId)
-            }, {
-              $set: {'passivityMsgId': mongoose.Types.ObjectId(doc._id).toString()}
-            }, (err) => {
-              if(err){
-                res.json({
-                    'status': '-1',
-                    'msg': '信息插入异常',
-                    'result': ''
-                  });
-              }else{
-                res.json({
-                    'status': '1',
-                    'msg': '邀请成功',
-                    'result': ''
-                  });
-              }
-            })
-        }
-      });
-    })
+  inviteUser(req, res, next).then( (result)=>{
+    console.log('邀请用户成功');
+  }, (error)=>{
+    res.json({
+      'status': '0',
+      'msg': 'Has invited!',
+      'result': ''
+    });
+  });
+});
+async function inviteUser (req, res, next){
+  if (req.cookies.clockLogin){
+
+    // 检查是否邀请过该用户--同一个用户可以被不同部门邀请
+    let check = await InitiativeMsg.findOne({'type': -1, 'userId': req.body.userId, 'departmentId': req.body.departmentId}).exec();
+    console.log(check);
+    if(check != null){
+      return Promise.reject('Has invited!')
+    }
+
+    // 首先查询管理员的姓名
+    let promise_ = await Administrator.findOne({'_id': mongoose.Types.ObjectId(req.cookies.clockLogin)}).exec();
+    // 保存主动信息
+    let inimsgResult = await saveIniMsgDoc(promise_, req, res);
+    // 保存被动信息
+    let passmsgResult = await savePassMsgDoc(inimsgResult, req, res);
+    // 更新主动信息
+    let result = await updateIniMsgDoc(passmsgResult, req, res);
+
+    return result;
   }else{
     res.json({
       'status': '-2',
@@ -303,7 +264,84 @@ router.post('/inviteUser', (req, res, next) => {
       'result': ''
     });
   }
-});
+}
+function saveIniMsgDoc (promise_, req, res){
+      return new Promise((resolve, reject)=>{
+          let iniMsgDoc = new InitiativeMsg({
+          passivityMsgId: '',
+          administratorId: req.cookies.clockLogin,
+          administratorName: promise_.name,
+          userId: req.body.userId,
+          userName: req.body.userName,
+          userPhone: req.body.userPhone,
+          departmentId: req.body.departmentId,
+          departmentName: req.body.departmentName,
+          date: new Date,
+          type: -1
+        });
+        iniMsgDoc.save( (err,doc) => {
+          if(err){
+            res.json({
+                'status': '-1',
+                'msg': '信息插入异常',
+                'result': ''
+              });
+          };
+          resolve({'administratorName': iniMsgDoc.administratorName,'initiativeMsgId': mongoose.Types.ObjectId(iniMsgDoc._id).toString()});
+        });
+      })
+}
+function savePassMsgDoc (inimsgResult, req, res){
+    return new Promise((resolve, reject)=>{
+      let passMsgDoc = new PassivityMsg({
+        initiativeMsgId: inimsgResult.initiativeMsgId,
+        administratorId: req.cookies.clockLogin,
+        administratorName: inimsgResult.administratorName,
+        userId: req.body.userId,
+        userName: req.body.userName,
+        userPhone: req.body.userPhone,
+        departmentId: req.body.departmentId,
+        departmentName: req.body.departmentName,
+        date: new Date,
+        type: -1
+      });
+      passMsgDoc.save( (err,doc) => {
+        if(err){
+          res.json({
+            'status': '-1',
+            'msg': '信息插入异常',
+            'result': ''
+          })
+        }
+        resolve({'passMsgDocId': mongoose.Types.ObjectId(passMsgDoc._id).toString(),'initiativeMsgId': inimsgResult.initiativeMsgId});
+      });
+    })
+}
+function updateIniMsgDoc (passmsgResult, req, res){
+    return new Promise((resolve, reject)=>{
+      InitiativeMsg.updateOne({
+        '_id': mongoose.Types.ObjectId(passmsgResult.initiativeMsgId)
+      }, {
+        $set: {'passivityMsgId': passmsgResult.passMsgDocId}
+      }, (err) => {
+        if(err){
+          res.json({
+              'status': '-1',
+              'msg': '信息插入异常',
+              'result': ''
+            });
+        }else{
+          res.json({
+              'status': '1',
+              'msg': '邀请成功',
+              'result': ''
+            });
+        }
+        resolve('ok');
+      })
+    })
+}
+
 
 /* cancelInvite */
 /* 取消邀请用户接口 */

@@ -168,6 +168,68 @@ router.post('/deleteGroup', (req, res, next) => {
 	}
 });
 
+/* editGroup */
+/* 编辑部门接口 */
+/* 方法：post */
+router.post('/editGroup', (req, res, next)=>{
+	if(req.cookies.clockLogin){
+		edit(req, res, next).then((resulr)=>{
+			res.json({
+              'status': '1',
+              'msg': '编辑成功',
+              'result': ''
+            });
+	})
+	}else{
+		res.json({
+			'status': 0,
+			'msg': '请先登录',
+			'result': ''
+		})
+	}
+})
+async function edit(req, res, next){
+	console.log(`部门id:${req.body.id}`);
+	let result1 = await new Promise((resolve, reject)=>{
+		Administrator.updateOne({
+			 "departmentList.deptId":  req.body.id
+		},{
+			$set: {'departmentList.$.deptName': req.body.name}
+		},(err)=>{
+			if(err){
+	          res.json({
+	              'status': '-1',
+	              'msg': '编辑异常',
+	              'result': ''
+	            });
+	        }
+	        resolve();
+		})
+	})
+	let result2 = await new Promise((resolve, reject)=>{
+		Department.updateOne({
+	        '_id': mongoose.Types.ObjectId(req.body.id)
+	      }, {
+	        $set: {'name': req.body.name,
+	        		'clockDate': req.body.clockDate,
+	        		'clockList': req.body.clockList,
+	        		'address': req.body.address
+	    		}
+	      }, (err) => {
+	        if(err){
+	          res.json({
+	              'status': '-1',
+	              'msg': '编辑异常',
+	              'result': ''
+	            });
+	        }
+	        resolve();
+	      })
+	})
+	return 1;
+}
+
+
 /* getStaffList */
 /* 获取员工列表接口 */
 /* 方法：get */
