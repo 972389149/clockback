@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<link rel="stylesheet" type="text/css" href="css/index.css"/>
+		<link rel="stylesheet" href="css/style.css">
+	</head>
+	<body>
+		<div class="index_frame_leftTop">
+			<div id='schedule-boxS'></div>
+			<div class="index_liTLeft">
+				<div class="index_liTline"></div>
+			</div>
+			<div class="index_liTRight">
+				<div class="index_liTline"></div>
+			</div>
+		</div>
+		<div class="index_frame_leftBottom">
+			<div class="index_liBLeft"></div>
+			<div class="index_liBRight"></div>
+			<div class="index_frame_leftBottom_Top clearfix">
+				<div>
+					<div id="attendance1" style="width: 100%;height: 145px;"></div>
+					<span>出勤情况</span>
+				</div>
+				<div>
+					<div id="attendance2" style="width: 100%;height: 145px;"></div>
+					<span>早退/迟到</span>
+				</div>
+				<div>
+					<div id="attendance3" style="width: 100%;height: 145px;"></div>
+					<span>缺勤</span>
+				</div>
+				<div>
+					<div id="attendance4" style="width: 100%;height: 145px;"></div>
+					<span>旷工</span>
+				</div>
+			</div>
+			<div class="index_frame_leftBottom_bottom clearfix">
+				<div>
+					<span>1</span>
+					<span>病假</span>
+				</div>
+				<div>
+					<span>0</span>
+					<span>事假</span>
+				</div>
+				<div>
+					<span>2</span>
+					<span>年假</span>
+				</div>
+				<div>
+					<span>3</span>
+					<span>调休</span>
+				</div>
+				<div>
+					<span>0</span>
+					<span>婚/丧假</span>
+				</div>
+				<div>
+					<span>0</span>
+					<span>产假/护理假</span>
+				</div>
+			</div>
+		</div>
+		
+		<script src="js/index.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/schedule.js" type="text/javascript" charset="utf-8"></script>
+		<script src="https://cdn.bootcss.com/echarts/4.2.0-rc.2/echarts.simple.min.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript">
+			var mySchedule = new Schedule({
+				el: '#schedule-boxS',
+				//异常考勤
+				qqDate : [{time:"2018-11-09",Morning:"",Afternoon:"16:01"},{time:"2018-11-16",Morning:"08:15",Afternoon:""},{time:"2018-12-19",Morning:"08:15",Afternoon:""}],
+				//正常考勤
+				zcDate : [
+							{time:"2018-11-01",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-02",Morning:"08:15",Afternoon:"16:03"},
+							{time:"2018-11-05",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-06",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-07",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-08",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-12",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-13",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-14",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-15",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-16",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-15",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-19",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-20",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-21",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-22",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-23",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-26",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-27",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-28",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-29",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-11-30",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-03",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-04",Morning:"08:15",Afternoon:"16:03"},
+							{time:"2018-12-05",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-06",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-07",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-10",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-11",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-12",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-13",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-14",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-17",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-18",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-19",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-20",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-21",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-24",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-25",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-26",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-27",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-28",Morning:"08:15",Afternoon:"16:01"},
+							{time:"2018-12-31",Morning:"08:15",Afternoon:"16:01"},
+						],
+			})
+		</script>
+	</body>
+</html>

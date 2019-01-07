@@ -12,25 +12,6 @@ const qs = require('querystring');
 
 // 用户登录接口
 router.get('/login', (req, res, next)=>{
-	let options = {
-        method: 'POST',
-        url: 'https://api.weixin.qq.com/sns/jscode2session?',
-        formData: {
-            appid: 'wxdf539abdfa024856',
-            secret: '35bf9310a2910ca0f2e1c49e39be8828',
-            js_code: req.body.code,
-            grant_type: 'authorization_code'
-        }
-    }
-	 request(options, (error, response, body) =>{
-	 	if(error){
-	 		console.log(error);
-	 	}else{
-	 		console.log(JSON.parse(body));
-	 	}
-	 })
-	
-
 	res.json({
 		'status': '1'
 	})
