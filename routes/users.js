@@ -7,37 +7,29 @@ const Administrator = require('../models/administrator.js');
 const InitiativeMsg = require('../models/initiativeMsg.js');
 const PassivityMsg = require('../models/passivityMsg.js');
 const http = require('http');  
+const request = require('request');
 const qs = require('querystring');  
 
 // 用户登录接口
 router.get('/login', (req, res, next)=>{
-	console.log(req.query.code);
-	let data = {
-		appid: 'wxdf539abdfa024856',
-		secret: '35bf9310a2910ca0f2e1c49e39be8828',
-		js_code: req.query.code,
-		grant_type: 'authorization_code'
-	}
-	let content = qs.stringify(data);  
-  	console.log(content);
-	let options = {  
-	    hostname: 'https://api.weixin.qq.com/sns/jscode2session' 
-	    path: '/sns/jscode2session?' + content,  
-	    method: 'GET'  
-	};
-
-	let req_ = http.request(options, function (res_) {  
-	    console.log('STATUS: ' + res_.statusCode);  
-	    console.log('HEADERS: ' + JSON.stringify(res_.headers));  
-	    res_.setEncoding('utf8');  
-	    res_.on('data', function (chunk) {  
-	        console.log('BODY: ' + chunk);  
-	    });  
-	});  
-  
-	req_.on('error', function (e) {  
-	    console.log('problem with request: ' + e.message);  
-	}); 
+	let options = {
+        method: 'POST',
+        url: 'https://api.weixin.qq.com/sns/jscode2session?',
+        formData: {
+            appid: 'wxdf539abdfa024856',
+            secret: '35bf9310a2910ca0f2e1c49e39be8828',
+            js_code: req.body.code,
+            grant_type: 'authorization_code'
+        }
+    }
+	 request(options, (error, response, body) =>{
+	 	if(error){
+	 		console.log(error);
+	 	}else{
+	 		console.log(JSON.parse(body));
+	 	}
+	 })
+	
 
 	res.json({
 		'status': '1'
