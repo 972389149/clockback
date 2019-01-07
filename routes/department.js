@@ -9,33 +9,24 @@ const Administrator = require('../models/administrator.js');
 /* 方法：get */
 /* 参数：id */
 router.get('/getOneGroup', (req, res, next) => {
-	if(req.query.id == ''){
+	if(!req.cookies.clockLogin){
 		res.json({
 			'status': '0',
-			'msg': '参数不能为空',
+			'msg': '请先登录',
 			'result': ''
 		});
 	}else{
-		let id_ = mongoose.Types.ObjectId(req.query.id);
-		Department.findOne({'_id': id_}, (err,doc) => {
+		Department.findOne({'_id': mongoose.Types.ObjectId(req.query.id)}, (err,doc) => {
 			if(err){
 				res.json({
 					'status': '-1',
-					'msg': '数据库检索失败',
-					'result': ''
-				})
-				return;
-			}
-			if(doc == ''){
-				res.json({
-					'status': '-2',
-					'msg': '不存在此部门',
+					'msg': '获取失败',
 					'result': ''
 				})
 			}else{
 				res.json({
 					'status': '1',
-					'msg': '成功',
+					'msg': '获取成功',
 					'result': doc
 				})
 			}
@@ -47,16 +38,44 @@ router.get('/getOneGroup', (req, res, next) => {
 /* 添加部门接口 */
 /* 方法：post */
 router.post('/addGroup', (req, res, next)=> {
-	let id_ = mongoose.Types.ObjectId(req.cookies.clockLogin);
-	let groupId = '';
-	let promise = Administrator.findOne({'_id': id_}).exec();
-    promise.then( (result) => {
-        let groupDoc = new Department({
+	if(req.cookies.clockLogin){
+		addGroup(req, res, next).then((result)=>{
+			res.json({
+	          'status': '1',
+	          'msg': '添加成功',
+	          'result': ''
+	        });
+		},(error)=>{
+			res.json({
+	          'status': '-1',
+	          'msg': '添加失败',
+	          'result': ''
+	        });
+		}).catch((err)=>{
+			res.json({
+	          'status': '-1',
+	          'msg': '添加错误',
+	          'result': ''
+	        });
+		})
+	}else{
+		res.json({
+			'status': '0',
+			'msg': '请先登录',
+			'result': ''
+		})
+	}
+})
+
+async function addGroup(req, res, next){
+	let promise_ = await Administrator.findOne({'_id': mongoose.Types.ObjectId(req.cookies.clockLogin)}).exec();
+	let saveGroup = await new Promise((resolve, reject)=>{
+		let groupDoc = new Department({
         	name: req.body.name,
         	administrator:{
-        		administratorName: result.name,
-        		administratorPhone: result.phone,
-        		administratorId: mongoose.Types.ObjectId(result._id).toString()
+        		administratorName: promise_.name,
+        		administratorPhone: promise_.phone,
+        		administratorId: mongoose.Types.ObjectId(promise_._id).toString()
         	},
         	clockDate: req.body.clockDate,
         	clockDayTimes: req.body.clockDayTimes,
@@ -67,106 +86,74 @@ router.post('/addGroup', (req, res, next)=> {
         });
         groupDoc.save( (err, doc) => {
         	if(err){
-		        res.json({
-		          'status': '-1',
-		          'msg': '添加部门异常',
-		          'result': ''
-		        })
-		    }else{
-		        
+		        reject(err);
 		    }
+		    resolve({'deptId': mongoose.Types.ObjectId(groupDoc._id).toString(),'deptName': req.body.name,'quantity': 0});
         })
-        return {'deptId': mongoose.Types.ObjectId(groupDoc._id).toString(),'deptName': req.body.name,'quantity': 0};
-      },
-      (err) => {
-      	res.json({
-        	'status': '0',
-		    'msg': '添加失败',
-		    'result': ''
-        })
-      }
-    ).then( (data) => {
-    	Administrator.update({'_id': id_},{"$push":{"departmentList": data}}, (err) => {
+	})
+	let updateAdmin = await new Promise((resolve, reject)=>{
+		Administrator.update({'_id': mongoose.Types.ObjectId(req.cookies.clockLogin)},{"$push":{"departmentList": saveGroup}}, (err) => {
     		if(err){
-    			res.json({
-		        	'status': '0',
-				    'msg': '添加失败',
-				    'result': ''
-		        })
+    			reject();
     		}else{
-    			res.json({
-		          'status': '1',
-		          'msg': '添加成功',
-		          'result': ''
-		        });
+    			resolve();
     		}
     	})
-    }, (err) => {
-    	res.json({
-        	'status': '0',
-		    'msg': '添加失败',
-		    'result': ''
-        });
-    });
-})
+	})
+	return 1;
+}
 
 /* delGroup */
 /* 删除部门接口 */
 /* 方法：post */
 /* 参数：id */
 router.post('/deleteGroup', (req, res, next) => {
-	if(req.body.id == ''){
-		res.json({
-          'status': '0',
-          'msg': '参数不能为空',
-          'result': ''
-        });
+	if(req.cookies.clockLogin){
+		deleteGroup(req, res, next).then((result)=>{
+			res.json({
+				'status': '1',
+				'msg': '删除成功',
+				'result': ''
+			})
+		},(err)=>{
+			res.json({
+				'status': '-1',
+				'msg': '删除失败',
+				'result': ''
+			})
+		})
 	}else{
-		let promise = Department.findOne({'_id': mongoose.Types.ObjectId(req.body.id)}).exec();
-		promise.then( (result) => {
-			// 这里可以优化，直接从cookie拿用户id，不用从数据库拿
-			let conditions = {'_id':  mongoose.Types.ObjectId(result.administrator.administratorId)};
-			let updates = {'$pull':{'departmentList': {'deptId': req.body.id}}};
-			Administrator.update(conditions, updates, (err) => {
-				if(err){
-					res.json({
-			        	'status': '-1',
-					    'msg': '删除失败',
-					    'result': ''
-			        });
-				}
-			})
-		}, (err) => {
-			res.json({
-	        	'status': '-1',
-			    'msg': '删除失败',
-			    'result': ''
-	        });
-		}).then( (result) => {
-			Department.remove({'_id': mongoose.Types.ObjectId(req.body.id)}, (err) => {
-				if(err){
-					res.json({
-			        	'status': '-1',
-					    'msg': '删除失败',
-					    'result': ''
-			        });
-				}else{
-					res.json({
-			        	'status': '1',
-					    'msg': '删除成功',
-					    'result': ''
-			        });
-				}
-			})
-		}, (err) => {
-			res.json({
-	        	'status': '-1',
-			    'msg': '删除失败',
-			    'result': ''
-	        });
+		res.json({
+			'status': '0',
+			'msg': '请先登录',
+			'result': ''
 		})
 	}
 });
+
+async function deleteGroup(req, res, next){
+	await new Promise((resolve, reject)=>{
+		let conditions = {'_id':  mongoose.Types.ObjectId(req.cookies.clockLogin)};
+		let updates = {'$pull':{'departmentList': {'deptId': req.body.id}}};
+		Administrator.updateOne(conditions, updates, (err) => {
+			if(err){
+				reject();
+			}else{
+				resolve();
+			}
+		})
+	});
+	await new Promise((resolve, reject)=>{
+		Department.remove({'_id': mongoose.Types.ObjectId(req.body.id)}, (err) => {
+			if(err){
+				reject();
+			}else{
+				resolve();
+			}
+		})
+	});
+	return 1;
+}
 
 /* editGroup */
 /* 编辑部门接口 */
@@ -235,27 +222,18 @@ async function edit(req, res, next){
 /* 方法：get */
 /* 参数：id */
 router.get('/getStaffList', (req, res, next) => {
-	if(req.query.id == ''){
+	if(!req.cookies.clockLogin){
 		res.json({
 			'status': '0',
-			'msg': '参数不能为空',
+			'msg': '请先登录',
 			'result': ''
 		});
 	}else{
-		let id_ = mongoose.Types.ObjectId(req.query.id);
-		Department.findOne({'_id': id_}, (err,doc) => {
+		Department.findOne({'_id': mongoose.Types.ObjectId(req.query.id)}, (err,doc) => {
 			if(err){
 				res.json({
 					'status': '-1',
-					'msg': '数据库检索失败',
-					'result': ''
-				})
-				return;
-			}
-			if(doc == ''){
-				res.json({
-					'status': '-2',
-					'msg': '不存在此部门',
+					'msg': '获取员工列表失败',
 					'result': ''
 				})
 			}else{

@@ -349,46 +349,59 @@ function updateIniMsgDoc (passmsgResult, req, res){
 /* 参数：很多*/
 router.post('/cancelInvite', (req, res, next) => {
   if(req.cookies.clockLogin){
-    // 这个做法显得有点蠢
-    let promise = InitiativeMsg.findOne({
-          '_id': mongoose.Types.ObjectId(req.body.id)
-        }).exec();
-    promise.then( (result) => {
-      InitiativeMsg.updateOne({
-        '_id': mongoose.Types.ObjectId(req.body.id)
-      },{
-        'type': 2
-      }, (err) => {
-        if(err){
-          console.log(err);
-        }
-      })
-    }).then( (result) => {
-      PassivityMsg.deleteOne({'_id': mongoose.Types.ObjectId(req.body.passivityMsgId)}, (err) => {
-        if(err){
-          res.json({
-            'status': '-1',
-            'msg': '删除邀请信息异常',
-            'result': ''
-          });
-        }else{
-          res.json({
-            'status': '1',
-            'msg': '取消成功',
-            'result': ''
-          });
-        }
-      })
+    cancelInvite (req, res, next).then((result)=>{
+      res.json({
+        'status': '1',
+        'msg': '取消邀请成功',
+        'result': ''
+      });
+    },(error)=>{
+      res.json({
+        'status': '-1',
+        'msg': '取消邀请异常',
+        'result': ''
+      });
     })
-
   }else{
     res.json({
-      'status': '-2',
+      'status': '0',
       'msg': '未登录',
       'result': ''
     });
   }
 });
+async function cancelInvite(req, res, next){
+  let promise = await InitiativeMsg.findOne({'_id': mongoose.Types.ObjectId(req.body.id)}).exec();
+  let updateIni = await new Promise((resolve, reject)=>{
+    InitiativeMsg.updateOne({
+        '_id': mongoose.Types.ObjectId(req.body.id)
+      },{
+        'type': 2
+      }, (err) => {
+        if(err){
+          res.json({
+            'status': '-1',
+            'msg': '取消邀请失败',
+            'result': ''
+          });
+        }
+      });
+    resolve();
+  })
+  let updatePass = await new Promise((resolve, reject)=>{
+    PassivityMsg.deleteOne({'_id': mongoose.Types.ObjectId(req.body.passivityMsgId)}, (err) => {
+        if(err){
+          res.json({
+            'status': '-1',
+            'msg': '取消邀请异常',
+            'result': ''
+          });
+        }
+      });
+    resolve();
+  })
+  return 1;
+}
 
 /* getAdmin */
 /* 获取管理员信息 */
