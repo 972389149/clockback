@@ -490,11 +490,71 @@ router.post('/editAdmin', (req, res, next)=> {
 
 // 部门删除成员接口，参数 depdId,userId
 router.post('/leaveGroup', (req, res, next) => {
-  let promise1 = Department.findOne({
-    '_id': mongoose.Types.ObjectId(req.body.depdId)
-  }).exec();
-  promise1.then( (result) => {
-    // console.log(`First val:${JSON.stringify(result)}`);
+  leaveGroup (req, res, next).then( (result) => {
+    res.json({
+      'status': '1',
+      'msg': '删除成功',
+      'result': result
+    })
+  },(err) => {
+    res.json({
+      'status': '-1',
+      'msg': '删除失败',
+      'result': err
+    })
+  })
+});
+
+async function leaveGroup (req, res, next){
+  // 获取要退出部门的信息
+  let promise1_ = await Department.findOne({'_id': mongoose.Types.ObjectId(req.body.depdId)}).exec();
+  // 查询该用户的详细信息
+  let promise2_ = await User.findOne({'_id': mongoose.Types.ObjectId(req.body.userId)}).exec();
+  // 编辑主动信息
+  let IMSG = {
+    'passivityMsgId': null,
+    'administratorId': promise1_.administrator.administratorId,
+    'administratorName': promise1_.administrator.administratorName,
+    'userId': String(promise2_._id),
+    'userName': promise2_.name,
+    'userPhone': promise2_.phone,
+    'departmentId': promise1_._id,
+    'departmentName': promise1_.name,
+    'date': new Date,
+    'type': 4
+  }
+
+  // 编辑被动信息
+  let PMSG = {
+    'initiativeMsgId': null,
+    'administratorId': promise1_.administrator.administratorId,
+    'administratorName': promise1_.administrator.administratorName,
+    'userId': String(promise2_._id),
+    'userName': promise2_.name,
+    'userPhone': promise2_.phone,
+    'departmentId': promise1_._id,
+    'departmentName': promise1_.name,
+    'date': new Date,
+    'type': 3
+  }
+
+  // 更新User信息
+  let user = await new Promise( (resolve, reject) => {
+    User.updateOne({
+        '_id': mongoose.Types.ObjectId(req.body.userId)
+      },{
+         $pull: {'dependence': {'depdId':  req.body.depdId}}
+      }, (err)=>{
+        if(err){
+          reject(err);
+        }else{
+          resolve();
+        }
+      });
+  })
+
+  // 更新部门信息
+  let department = await new Promise( (resolve, reject) => {
     Department.updateOne({
       '_id': mongoose.Types.ObjectId(req.body.depdId)
     },{
@@ -502,112 +562,37 @@ router.post('/leaveGroup', (req, res, next) => {
       $pull: {'staffList': {'userId':  req.body.userId}}
     }, (err)=>{
       if(err){
-        res.json({
-          'status': '0',
-          'msg': err,
-          'result': ''
-        })
+        reject(err);
+      }else{
+        resolve();
       }
     });
-    return result;
-  }).then( (result) => {
-    // console.log(`Second val:${JSON.stringify(result)}`);
-    let promise2 = User.findOne({
-      '_id': mongoose.Types.ObjectId(req.body.userId)
-    }).exec();
-    promise2.then( (val)=>{
-      // console.log(`Third val:${JSON.stringify(val)}`);
-      User.updateOne({
-        '_id': mongoose.Types.ObjectId(req.body.userId)
-      },{
-         $pull: {'dependence': {'depdId':  req.body.depdId}}
-      }, (err)=>{
-        if(err){
-          res.json({
-            'status': '0',
-            'msg': err,
-            'result': ''
-          })
-        }
-      });
-      let IMSG = {
-        'passivityMsgId': '',
-        'administratorId': result.administrator.administratorId,
-        'administratorName': result.administrator.administratorName,
-        'userId': String(val._id),
-        'userName': val.name,
-        'userPhone': val.phone,
-        'departmentId': result._id,
-        'departmentName': result.name,
-        'date': new Date,
-        'type': 4
-      }
-      let PMSG = {
-        'initiativeMsgId': '',
-        'administratorId': result.administrator.administratorId,
-        'administratorName': result.administrator.administratorName,
-        'userId': String(val._id),
-        'userName': val.name,
-        'userPhone': val.phone,
-        'departmentId': result._id,
-        'departmentName': result.name,
-        'date': new Date,
-        'type': 3
-      }
-      let obj = {'initiativeMsg': IMSG, 'passivityMsg': PMSG};
-      return obj;
-    }).then( (val)=>{
-      let obj1 = val;
-      // console.log(`Four val:${JSON.stringify(val)}`);
-      let msgPromise = Department.find({
-        '_id': mongoose.Types.ObjectId(req.body.depdId)
-      }).exec();
-      msgPromise.then( (val)=>{
-        let iniMsg = new InitiativeMsg(obj1.initiativeMsg);
-        iniMsg.save( (err,doc) => {
-              if(err){
-                res.json({
-                    'status': '-1',
-                    'msg': '删除失败',
-                    'result': ''
-                  });
-              };
-            });
-        obj1.passivityMsg.initiativeMsgId = iniMsg._id;
-        return obj1;
-      }).then( (val)=>{
-        let pasMsg = new PassivityMsg(val.passivityMsg);
-        pasMsg.save( (err,doc) => {
-              if(err){
-                res.json({
-                    'status': '-1',
-                    'msg': '删除失败',
-                    'result': ''
-                  });
-              }else{
-                InitiativeMsg.updateOne({
-                  '_id': mongoose.Types.ObjectId(val.passivityMsg.initiativeMsgId)
-                },{
-                  $set: {'passivityMsgId': mongoose.Types.ObjectId(doc._id).toString()}
-                },(err) => {
-                    if(err){
-                      res.json({
-                          'status': '-1',
-                          'msg': '信息插入异常',
-                          'result': ''
-                        });
-                    }else{
-                      res.json({
-                          'status': '1',
-                          'msg': '删除成功',
-                          'result': ''
-                        });
-                    }
-                  })
-              };
-          });
-      })
-    })
   })
-});
+
+  // 发送主动信息
+  let ini = await new Promise( (resolve, reject) => {
+    let iniMsg = new InitiativeMsg(IMSG);
+      iniMsg.save( (err,doc) => {
+            if(err){
+                reject(err);
+            }else{
+              resolve(doc);
+            }
+        })
+  })
+
+  // 发送被动信息
+  let pass = await new Promise( (resolve, reject) => {
+    let pasMsg = new PassivityMsg(PMSG);
+      pasMsg.save( (err,doc) => {
+            if(err){
+                reject(err);
+            }else{
+              resolve(doc);
+            }
+        })
+  })
+
+  return 1;
+}
 module.exports = router;

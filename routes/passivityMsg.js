@@ -62,35 +62,54 @@ router.get('/msgDetail', (req, res, next) => {
 })
 
 // 用户接受或者拒绝申请
+// 参数：id(信息id)、type(操作参数)、
 router.get('/msgDealing', (req, res, next) => {
 	// 1是拒绝，0是接受;数据库中 0是加入成功，1是拒绝加入
-	let type = ['0','1'];
-	if(type.includes(req.query.type)){
-		let promise = PassivityMsg.findOne({
+	msgDealing(req, res, next).then( (result) => {
+		if(result == '0'){
+			res.json({
+				'status': '1',
+				'msg': '接受成功',
+				'result': result
+			})
+		}else{
+			res.json({
+				'status': '1',
+				'msg': '拒绝成功',
+				'result': result
+			})
+		}
+	}, (err) => {
+		res.json({
+			'status': '-1',
+			'msg': '操作失败！',
+			'result': err
+		})
+	})
+});
+
+async function msgDealing(req, res, next){
+	let promise_ = await PassivityMsg.findOne({
 			'_id': mongoose.Types.ObjectId(req.query.id)
 		}).exec();
-		promise.then( (result)=>{
-			PassivityMsg.updateOne({
-				'_id': mongoose.Types.ObjectId(req.query.id)
-			},{
-				$set:{
-					'type': Number(req.query.type),
-					'date': new Date
-				}
-			}, (err)=>{
-				if(err){
-					res.json({
-						'status': '0',
-						'msg': err,
-						'result': ''
-					})
-				}
-			})
-			// console.log(`第一个result：${result}`);
-			let msg = {'userId': result.userId, 'departmentId': result.departmentId,'depdName':result.departmentName,'depdAdmin':result.administratorName}
-			return msg;
-		}).then( (result)=>{
-			InitiativeMsg.updateOne({
+	let updatePass = await new Promise( (resolve, reject) => {
+		PassivityMsg.updateOne({
+			'_id': mongoose.Types.ObjectId(req.query.id)
+		},{
+			$set:{
+				'type': Number(req.query.type),
+				'date': new Date
+			}
+		}, (err)=>{
+			if(err){
+				reject(err);
+			}else{
+				resolve();
+			}
+		})
+	});
+	let updateIni = await new Promise( (resolve, reject) => {
+		InitiativeMsg.updateOne({
 				'passivityMsgId': req.query.id
 			},{
 				$set:{
@@ -99,110 +118,82 @@ router.get('/msgDealing', (req, res, next) => {
 				}
 			}, (err)=>{
 				if(err){
-					res.json({
-						'status': '0',
-						'msg': err,
-						'result': ''
-					})
+					reject(err);
 				}else{
-					if(req.query.type == '0'){
-						let newVal = result;
-						let acceptPromise = User.findOne({
-							'_id': mongoose.Types.ObjectId(newVal.userId)
-						}).exec();
-						acceptPromise.then( (val)=>{
-							let userMsg = {
-								'userId': String(val._id),
-								'phone': val.phone,
-								'name': val.name,
-								'sex': val.sex,
-								'headImg': val.headImg,
-								'age': val.age
-							}
-							Department.updateOne({
-								'_id':  mongoose.Types.ObjectId(newVal.departmentId)
-							},{
-								$push: {'staffList': userMsg},
-								$inc: {quantity: 1}
-							},(err)=>{
-								if(err){
-									res.json({
-							        	'status': '0',
-									    'msg': '同意失败',
-									    'result': ''
-							        })
-								}
-							})
-						}).then( (val)=>{
-							let userdep = {
-								'depdId': newVal.departmentId,
-								'depdName': newVal.depdName,
-								'depdAdmin': newVal.depdAdmin
-							}
-							User.updateOne({
-								'_id': mongoose.Types.ObjectId(newVal.userId)
-							},{
-								$push: {'dependence': userdep}
-							}, (err)=>{
-								if(err){
-									res.json({
-							        	'status': '0',
-									    'msg': '同意失败',
-									    'result': ''
-							        })
-								}else{
-									res.json({
-							        	'status': '1',
-									    'msg': '同意成功',
-									    'result': ''
-							        })
-								}
-							})
-						})
-					}else{
-						res.json({
-							'status': '1',
-							'msg': '拒绝成功',
-							'result': ''
-						})
-					}
+					resolve();
+				}
+			})
+	})
+	if(req.query.type == '0'){
+		let acceptPromise = await User.findOne({
+			'_id': mongoose.Types.ObjectId(promise_.userId)
+		}).exec();
+		let updateDepart = await new Promise( (resolve, reject) => {
+			let userMsg = {
+				'userId': String(acceptPromise._id),
+				'phone': acceptPromise.phone,
+				'name': acceptPromise.name,
+				'sex': acceptPromise.sex,
+				'headImg': acceptPromise.headImg,
+				'age': acceptPromise.age
+			}
+			Department.updateOne({
+				'_id':  mongoose.Types.ObjectId(promise_.departmentId)
+			},{
+				$push: {'staffList': userMsg},
+				$inc: {'quantity': 1}
+			},(err)=>{
+				if(err){
+					reject(err);
+				}else{
+					resolve();
+				}
+				
+			})
+		});
+		console.log(promise_.userId);
+		let updateUser = await new Promise( (resolve, reject) => {
+			let userdep = {
+				'depdId': promise_.departmentId,
+				'depdName': promise_.departmentName,
+				'depdAdmin': promise_.administratorName
+			}
+			console.log(userdep);
+			User.updateOne({
+				'_id': mongoose.Types.ObjectId(promise_.userId)
+			},{
+				$push: {'dependence': userdep}
+			}, (err)=>{
+				if(err){
+					reject(err);
+				}else{
+					resolve();
 				}
 			})
 		})
+		return '0';
 	}else{
-		res.json({
-			'status': '-1',
-			'msg': '参数错误',
-			'result': ''
-		})
+		return '1';
 	}
-});
+}
 
 // 用户删除消息接口
 router.post('/deleteMsg', (req, res, next)=> {
-	if(req.body.id){
-		PassivityMsg.deleteOne({'_id': mongoose.Types.ObjectId(req.body.id)}, (err) => {
-			if(err){
-				res.json({
-					'status': '0',
-					'msg': '数据库检索异常',
-					'result': ''
-				});
-			}else{
-				res.json({
-					'status': '1',
-					'msg': '删除成功',
-					'result': ''
-				});
-			}
-		})
-	}else{
-		res.json({
-			'status': '-1',
-			'msg': '参数错误',
-			'result': ''
-		})
-	}
+	PassivityMsg.deleteOne({'_id': mongoose.Types.ObjectId(req.body.id)}, (err) => {
+		if(err){
+			res.json({
+				'status': '-1',
+				'msg': '删除异常',
+				'result': err
+			});
+		}else{
+			res.json({
+				'status': '1',
+				'msg': '删除成功',
+				'result': ''
+			});
+		}
+	})
 })
 
 module.exports = router;
