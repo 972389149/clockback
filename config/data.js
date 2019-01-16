@@ -104,3 +104,64 @@
 // 		'usersRecordId': ['dasl3rwejdkk']				//用户打卡记录id
 // 	}]
 // }
+
+// userrecord => {
+// 	'_id': '....',
+// 	'userId': '...',
+// 	'openid': '...',
+// 	'canClock': [{
+// 		'deptId': '...',
+// 		'adminId': '...',
+// 		'clockStart': '...',
+// 		'clockEnd': '...',
+// 		'clockDate': '...',
+// 		'address': ['...','...']
+// 	}],
+// 	'waitClock': [{
+// 		'deptId': '...',
+// 		'adminId': '...',
+// 		'clockStart': '...',
+// 		'clockEnd': '...',
+// 		'clockDate': '...',
+// 		'address': ['...','...']
+// 	}],
+// 	'hasClocked': [{
+// 		'deptId': '...',
+// 		'adminId': '...',
+// 		'clockStart': '...',
+// 		'clockEnd': '...',
+// 		'clockDate': '...',
+// 	 	'clockTime': '...',
+// 		'address': ['...','...'],
+// 	 	'clockAddress': ['...','...']
+// 	}],
+//	'absenceClocked': [{
+// 		'deptId': '...',
+// 		'adminId': '...',
+// 		'clockStart': '...',
+// 		'clockEnd': '...',
+// 		'clockDate': '...',
+// 		'address': ['...','...']
+//	}]
+// }
+
+// departmentrecord => {
+// 	'_id': '...',
+// 	'deptId': '...',
+// 	'adminId': '...',
+//	'hasClocked':[{
+// 		'userId': '...',
+// 		'clockDate': '...',
+// 		'clockStart': '...',
+// 		'clockEnd': '...',
+// 		'clockTime': '...',
+// 		'clockAddress': ['...','...']
+//   }],
+//	 'noClocked':[{
+// 		'userId': '...',
+// 		'clockDate': '...', 
+// 		'clockStart': '...',
+// 		'clockEnd': '...',
+// 		'clockAddress': ['...','...']
+// 	 }]
+// }

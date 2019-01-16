@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const router = express.Router();
 const Department = require('../models/departments.js');
 const Administrator = require('../models/administrator.js');
+const DepartmentRecord = require('../models/departmentRecord.js');
 
 /* getOneGroup */
 /* 获取部门信息接口 */
@@ -100,6 +101,21 @@ async function addGroup(req, res, next){
     		}
     	})
 	})
+	let saveRecord = await new Promise((resolve, reject)=>{
+		let groupRecord = new DepartmentRecord({
+			deptId: saveGroup.deptId,
+			adminId: mongoose.Types.ObjectId(promise_._id).toString(),
+			hasClocked: [],
+			noClocked: []
+		})
+		groupRecord.save((err, doc)=>{
+			if(err){
+				reject(err);
+			}else{
+				resolve(groupRecord);
+			}
+		})
+	})
 	return 1;
 }
 
@@ -152,6 +168,15 @@ async function deleteGroup(req, res, next){
 			}
 		})
 	});
+	await new Promise((resolve, reject)=>{
+		DepartmentRecord.remove({'deptId': req.body.id}, (err) => {
+			if(err){
+				reject();
+			}else{
+				resolve();
+			}
+		})
+	})
 	return 1;
 }
 

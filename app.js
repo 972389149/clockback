@@ -13,6 +13,8 @@ const departmentRouter = require('./routes/department.js');
 const userRouter = require('./routes/users.js');
 const initiativeMsgRouter = require('./routes/initiativeMsg.js');
 const passivityMsgRouter = require('./routes/passivityMsg.js');
+const departmentrecordRouter = require('./routes/departmentrecord.js');
+const userrecordRouter = require('./routes/userrecord.js');
 
 const app = express();
 
@@ -40,6 +42,8 @@ app.use('/department', departmentRouter);
 app.use('/user', userRouter);
 app.use('/initiativeMsg', initiativeMsgRouter);
 app.use('/passivityMsg', passivityMsgRouter);
+app.use('/departmentRecord', departmentrecordRouter);
+app.use('/userRecord', userrecordRouter)
 
 //启动MongoDB服务器
 const mongoose = require('./config/mongoose.js');

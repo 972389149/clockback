@@ -6,6 +6,7 @@ const User = require('../models/users.js');
 const Administrator = require('../models/administrator.js');
 const InitiativeMsg = require('../models/initiativeMsg.js');
 const PassivityMsg = require('../models/passivityMsg.js');
+const UserRecord = require('../models/userRecord.js');
 const http = require('http');  
 const request = require('request');
 const qs = require('querystring');  
@@ -130,6 +131,23 @@ async function register (req, res, next){
 			reject();
 		}
 
+	})
+	await new Promise((resolve, reject)=>{
+		let userRecord = new UserRecord({
+			userId: user._id,
+			openid: openid,
+			canClock: [],
+			waitClock: [],
+			hasClocked: [],
+			absenceClocked: []
+		})
+		userRecord.save((err, doc)=>{
+			if(err){
+				reject()
+			}else{
+				resolve()
+			}
+		})
 	})
 	return user; 
 }
