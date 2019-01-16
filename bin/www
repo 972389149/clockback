@@ -89,7 +89,7 @@ function onListening() {
   debug('Listening on ' + bind);
 }
 
-const sd = require('silly-datetime');
+// const sd = require('silly-datetime');
 const DepartmentRecord = require('../models/departmentRecord.js');
 const UserRecord = require('../models/userRecord.js');
 const Department = require('../models/departments.js');
@@ -100,5 +100,5 @@ const PassivityMsg = require('../models/passivityMsg.js');
 
 // 每1分钟，更新一下打卡数据
 setInterval(()=>{
-  console.log(`数据库更新打卡数据：${sd.format(new Date(), 'YYYY-MM-DD HH:mm')}`);
+  // console.log(`数据库更新打卡数据：${sd.format(new Date(), 'YYYY-MM-DD HH:mm')}`);
 },60000);
