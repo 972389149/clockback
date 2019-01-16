@@ -125,7 +125,9 @@ async function register (req, res, next){
 					reject(err);
 				}else{
 					// console.log(doc);
-					resolve(doc);
+					let obj = doc;
+					obj.id = mongoose.Types.ObjectId(user_._id).toString();
+					resolve(obj);
 				}
 			})
 		}else{
@@ -134,9 +136,9 @@ async function register (req, res, next){
 
 	})
 	let record  = await new Promise((resolve, reject)=>{
-		console.log(user);
+		console.log(user.id);
 		let userRecord = new UserRecord({
-			userId: user,
+			userId: user.id,
 			openid: openid,
 			canClock: [],
 			waitClock: [],
