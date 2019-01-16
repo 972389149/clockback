@@ -124,6 +124,7 @@ async function register (req, res, next){
 				if(err){
 					reject(err);
 				}else{
+					console.log(doc);
 					resolve(doc);
 				}
 			})
