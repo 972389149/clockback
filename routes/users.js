@@ -133,6 +133,7 @@ async function register (req, res, next){
 
 	})
 	await new Promise((resolve, reject)=>{
+		console.log(user._id);
 		let userRecord = new UserRecord({
 			userId: user._id,
 			openid: openid,
