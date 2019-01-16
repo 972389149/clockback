@@ -107,7 +107,7 @@ async function register (req, res, next){
 	        }
 	    });
 	})
-	let user = new Promise( (resolve, reject) => {
+	let user = await new Promise( (resolve, reject) => {
 		// console.log(openid);
 		if(openid != undefined){
 			let user_ = new User({
@@ -124,10 +124,7 @@ async function register (req, res, next){
 				if(err){
 					reject(err);
 				}else{
-					// console.log(doc);
-					let obj = doc;
-					obj.id = mongoose.Types.ObjectId(user_._id).toString();
-					resolve(obj);
+					resolve(doc);
 				}
 			})
 		}else{
@@ -136,9 +133,8 @@ async function register (req, res, next){
 
 	})
 	let record  = await new Promise((resolve, reject)=>{
-		console.log(user.id);
 		let userRecord = new UserRecord({
-			userId: user.id,
+			userId: user._id,
 			openid: openid,
 			canClock: [],
 			waitClock: [],
