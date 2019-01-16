@@ -108,7 +108,7 @@ async function register (req, res, next){
 	    });
 	})
 	let user = new Promise( (resolve, reject) => {
-		console.log(openid);
+		// console.log(openid);
 		if(openid != undefined){
 			let user_ = new User({
 				sessionId: openid,
@@ -124,8 +124,8 @@ async function register (req, res, next){
 				if(err){
 					reject(err);
 				}else{
-					console.log(doc);
-					resolve(doc);
+					// console.log(doc);
+					resolve(doc._id);
 				}
 			})
 		}else{
@@ -136,7 +136,7 @@ async function register (req, res, next){
 	await new Promise((resolve, reject)=>{
 		console.log(user);
 		let userRecord = new UserRecord({
-			userId: user._id,
+			userId: user,
 			openid: openid,
 			canClock: [],
 			waitClock: [],
