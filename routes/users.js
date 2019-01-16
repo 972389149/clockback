@@ -125,7 +125,7 @@ async function register (req, res, next){
 					reject(err);
 				}else{
 					// console.log(doc);
-					resolve(doc._id);
+					resolve(doc);
 				}
 			})
 		}else{
@@ -133,7 +133,7 @@ async function register (req, res, next){
 		}
 
 	})
-	await new Promise((resolve, reject)=>{
+	let record  = await new Promise((resolve, reject)=>{
 		console.log(user);
 		let userRecord = new UserRecord({
 			userId: user,
