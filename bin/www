@@ -157,7 +157,12 @@ async function update(year,month,day,hour,minute){
           if(start <= now && end >= now){
             console.log(`到达打卡时间`)
             let canClock = await UserRecord.findOne({'canClock.deptId': departmentMessage._id.toString(),'userId': userDependence[i]._id}).exec();
-            if(canClock == null){
+            let hasClockOrNot = await UserRecord.findOne({
+              'hasClock.deptId': departmentMessage._id.toString(),
+              'hasClock.clockDate': today,
+              'userId': userDependence[i]._id
+            }).exec();
+            if(canClock == null && hasClockOrNot == null){
               console.log(`插入到可打卡`)
               await new Promise((resolve, reject)=>{
                 let content = {
@@ -303,6 +308,29 @@ async function update(year,month,day,hour,minute){
                   }
                 })
               })
+
+              await new Promise((resolve, reject)=>{
+                let content = {
+                  'clockStart': start,
+                  'clockEnd': end,
+                  'clockDate': today,
+                  'clockAddress': departmentMessage.address,
+                  'userId':  userDependence[i]._id.toString(),
+                  'userName': userDependence[i].name
+                }
+                DepartmentRecord.updateOne({
+                  'deptId': departmentMessage._id.toString()
+                }, {
+                  "$push":{"noClocked": content}
+                }, (err)=>{
+                  if(err){
+                    reject(err);
+                  }else{
+                    resolve();
+                  }
+                })
+              })
+
             }else{
               console.log(`缺勤信息已存在，不用插入`);
             }
