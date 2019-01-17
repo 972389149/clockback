@@ -3,7 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const UserRecord = require('../models/userRecord.js');
 const Department = require('../models/departments.js');
-
+const DepartmentRecord = require('../models/departmentRecord.js');
 /* 用户获取可打卡信息接口. */
 /* 参数 userId. */
 router.get('/getCanClock', (req, res, next)=>{
