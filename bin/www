@@ -115,7 +115,7 @@ setInterval(()=>{
   },(err)=>{
     console.log(`--------------------警告：更新用户信息失败，原因${err}--------------------`);
   });
-},60000);
+},30000);
 
 async function update(year,month,day,hour,minute){
   let userDependence = await User.find({},(err, doc)=>{
@@ -182,10 +182,29 @@ async function update(year,month,day,hour,minute){
                   if(err){
                     reject(err);
                   }else{
+                    console.log('插入成功');
                     resolve();
                   }
                 })
               })
+
+              console.log('删除待打卡')
+              await new Promise((resolve, reject)=>{
+                UserRecord.updateOne({
+                  'userId': userDependence[i]._id
+                }, {
+                  "$pull": {'waitClock': {'deptId': departmentMessage._id.toString()}}
+                }, (err)=>{
+                  if(err){
+                    reject(err);
+                  }else{
+                    console.log('删除成功');
+                    resolve();
+                  }
+                })
+              })
+                  
+
             }else{
               console.log(`可打卡信息已存在，不用插入`)
               // console.log(canClock.canClock)
@@ -255,32 +274,7 @@ async function update(year,month,day,hour,minute){
                 })
               })
             }else{
-              console.log(`待打卡信息已存在，不用插入`)
-              for(let i=0; i<waitClock.waitClock.length; i++){
-                if(waitClock.waitClock[i].deptId == departmentMessage._id.toString()){
-                  if(now > waitClock.waitClock[i].clockStart){
-                    console.log(`待打卡信息到达可打卡，删除`)
-                    await new Promise((resolve, reject)=>{
-                      UserRecord.updateOne({
-                        'userId': userDependence[i]._id
-                      }, {
-                        "$pull": {'waitClock': {'deptId': waitClock.waitClock[i].deptId}}
-                      }, (err)=>{
-                        if(err){
-                          reject(err);
-                        }else{
-                          resolve();
-                        }
-                      })
-                    })
-                  }else{
-                    console.log(`待打卡信息没过期`)
-                    break;
-                  }
-                }else{
-                  continue;
-                }
-              }
+              console.log(`待打卡信息已存在，不用插入`);
             }
 
           }
