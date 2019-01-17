@@ -97,8 +97,221 @@ const User = require('../models/users.js');
 const Administrator = require('../models/administrator.js');
 const InitiativeMsg = require('../models/initiativeMsg.js');
 const PassivityMsg = require('../models/passivityMsg.js');
+const mongoose = require('mongoose');
 
 // 每1分钟，更新一下打卡数据
 setInterval(()=>{
-  // console.log(`数据库更新打卡数据：${sd.format(new Date(), 'YYYY-MM-DD HH:mm')}`);
+  console.log('--------------------开始更新数据库--------------------');
+  var date = new Date();
+  var year = date.getFullYear();
+  var month = date.getMonth()+1;
+  var day = date.getDate();
+  var hour = date.getHours();
+  var minute = date.getMinutes();
+  var second = date.getSeconds();
+  console.log(year+'年'+month+'月'+day+'日 '+hour+':'+minute+':'+second);
+  update(year,month,day,hour,minute).then((result)=>{
+    console.log('--------------------提示：更新成功--------------------');
+  },(err)=>{
+    console.log(`--------------------警告：更新用户信息失败，原因${err}--------------------`);
+  });
 },60000);
+
+async function update(year,month,day,hour,minute){
+  let userDependence = await User.find({},(err, doc)=>{
+    console.log(`需更新信息用户数：${doc.length}`);
+  }).exec();
+
+  for(let i=0; i<userDependence.length; i++){
+    console.log(`遍历用户：${userDependence[i].name}`);
+    for(let j=0; j<userDependence[i].dependence.length; j++){
+      // 获取部门的打卡信息
+      let departmentMessage = await new Promise((resolve, reject)=>{
+        Department.findOne({'_id': mongoose.Types.ObjectId(userDependence[i].dependence[j].depdId)}, (err, doc)=>{
+          if(err){
+            reject('获取部门信息失败');
+          }else{
+            resolve(doc);
+          }
+        })
+      })
+
+      console.log(`开始遍历：${userDependence[i].dependence[j].depdName}`)
+      for(let k=0; k<departmentMessage.clockDate.date.length; k++){
+        console.log(`${departmentMessage.clockDate.date[k]}`);
+        // 拼接今天的日期
+        let day_,month_,hour_,minute_;
+        month_ = month.toString().split('').length<2?'0' + month:month;
+        day_ = day.toString().split('').length<2?'0' + day:day;
+        hour_ = hour.toString().split('').length<2?'0' + hour:hour;
+        minute_ = minute.toString().split('').length<2?'0' + minute:minute;
+
+        let today = year + '-' + month_ + '-' + day_;
+        let start = Number(departmentMessage.clockList[0].clockStart.split(':').join(''));
+        let end = Number(departmentMessage.clockList[0].clockEnd.split(':').join(''));
+        let now = hour_.toString() + minute_.toString();
+
+        if(departmentMessage.clockDate.date[k] == today){
+          console.log(`--------到达打卡日期--------`);
+          // 可打卡
+          if(start <= now && end >= now){
+            console.log(`到达打卡时间`)
+            let canClock = await UserRecord.findOne({'canClock.deptId': departmentMessage._id.toString(),'userId': userDependence[i]._id}).exec();
+            if(canClock == null){
+              console.log(`插入到可打卡`)
+              await new Promise((resolve, reject)=>{
+                let content = {
+                  'deptId': departmentMessage._id.toString(),
+                  'adminId': departmentMessage.administrator.administratorId,
+                  'clockStart': start,
+                  'clockEnd': end,
+                  'clockDate': today,
+                  'address': departmentMessage.address
+                }
+                UserRecord.updateOne({
+                  'userId': userDependence[i]._id
+                }, {
+                  "$push":{"canClock": content}
+                }, (err)=>{
+                  if(err){
+                    reject(err);
+                  }else{
+                    resolve();
+                  }
+                })
+              })
+            }else{
+              console.log(`可打卡信息已存在，不用插入`)
+              // console.log(canClock.canClock)
+              for(let i=0; i<canClock.canClock.length; i++){
+                if(canClock.canClock[i].deptId == departmentMessage._id.toString()){
+                  if(now > canClock.canClock[i].clockEnd){
+                    console.log(`可打卡信息过期，删除`)
+                    await new Promise((resolve, reject)=>{
+                      UserRecord.updateOne({
+                        'userId': userDependence[i]._id
+                      }, {
+                        "$pull": {'canClock': {'deptId': canClock.canClock[i].deptId}}
+                      }, (err)=>{
+                        if(err){
+                          reject(err);
+                        }else{
+                          resolve();
+                        }
+                      })
+                    })
+                  }else{
+                    console.log(`可打卡信息没过期`)
+                    break;
+                  }
+                }else{
+                  continue;
+                }
+              }
+              // if(canClock.canClock.length; i++[{'deptId' == departmentMessage._id.toString()]){}
+
+
+              // resolve()
+            }
+          }
+
+          // 待打卡
+          if(start > now){
+            console.log(`未到打卡时间`);
+            let waitClock = await UserRecord.findOne({'waitClock.deptId': departmentMessage._id.toString(),'userId': userDependence[i]._id}).exec();
+            if(waitClock == null){
+              console.log(`可插入到待打卡`)
+              await new Promise((resolve, reject)=>{
+                let content = {
+                  'deptId': departmentMessage._id.toString(),
+                  'adminId': departmentMessage.administrator.administratorId,
+                  'clockStart': start,
+                  'clockEnd': end,
+                  'clockDate': today,
+                  'address': departmentMessage.address
+                }
+                UserRecord.updateOne({
+                  'userId': userDependence[i]._id
+                }, {
+                  "$push":{"waitClock": content}
+                }, (err)=>{
+                  if(err){
+                    reject(err);
+                  }else{
+                    resolve();
+                  }
+                })
+              })
+            }else{
+              console.log(`待打卡信息已存在，不用插入`)
+              for(let i=0; i<waitClock.waitClock.length; i++){
+                if(waitClock.waitClock[i].deptId == departmentMessage._id.toString()){
+                  if(now > waitClock.waitClock[i].clockStart){
+                    console.log(`待打卡信息到达可打卡，删除`)
+                    await new Promise((resolve, reject)=>{
+                      UserRecord.updateOne({
+                        'userId': userDependence[i]._id
+                      }, {
+                        "$pull": {'waitClock': {'deptId': waitClock.waitClock[i].deptId}}
+                      }, (err)=>{
+                        if(err){
+                          reject(err);
+                        }else{
+                          resolve();
+                        }
+                      })
+                    })
+                  }else{
+                    console.log(`待打卡信息没过期`)
+                    break;
+                  }
+                }else{
+                  continue;
+                }
+              }
+            }
+
+          }
+
+          // 缺勤
+          if(now > end){
+            console.log(`超过打卡时间`);
+            let absenceClocked = await UserRecord.findOne({'absenceClocked.deptId': departmentMessage._id.toString(),'userId': userDependence[i]._id}).exec();
+            if(absenceClocked == null){
+              console.log(`可插入到缺勤`)
+              await new Promise((resolve, reject)=>{
+                let content = {
+                  'deptId': departmentMessage._id.toString(),
+                  'adminId': departmentMessage.administrator.administratorId,
+                  'clockStart': start,
+                  'clockEnd': end,
+                  'clockDate': today,
+                  'address': departmentMessage.address
+                }
+                UserRecord.updateOne({
+                  'userId': userDependence[i]._id
+                }, {
+                  "$push":{"absenceClocked": content}
+                }, (err)=>{
+                  if(err){
+                    reject(err);
+                  }else{
+                    resolve();
+                  }
+                })
+              })
+            }else{
+              console.log(`缺勤信息已存在，不用插入`);
+            }
+
+          }
+        }else{
+          console.log(`--------不是打卡日期--------`)
+        }
+      }
+
+
+
+    }
+  }
+}

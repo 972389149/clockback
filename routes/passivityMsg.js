@@ -9,7 +9,7 @@ const PassivityMsg = require('../models/passivityMsg.js');
 
 // 用户获取系信息接口
 router.get('/getMsg', (req, res, next) => {
-	if(req.body.id == ''){
+	if(req.query.id == ''){
 		res.json({
 			'status': '0',
 			'msg': '参数不能为空',
