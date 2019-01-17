@@ -166,7 +166,8 @@ async function update(year,month,day,hour,minute){
                   'clockStart': start,
                   'clockEnd': end,
                   'clockDate': today,
-                  'address': departmentMessage.address
+                  'address': departmentMessage.address,
+                  'name': departmentMessage.name
                 }
                 UserRecord.updateOne({
                   'userId': userDependence[i]._id
@@ -228,7 +229,8 @@ async function update(year,month,day,hour,minute){
                   'clockStart': start,
                   'clockEnd': end,
                   'clockDate': today,
-                  'address': departmentMessage.address
+                  'address': departmentMessage.address,
+                  'name': departmentMessage.name
                 }
                 UserRecord.updateOne({
                   'userId': userDependence[i]._id
@@ -286,7 +288,8 @@ async function update(year,month,day,hour,minute){
                   'clockStart': start,
                   'clockEnd': end,
                   'clockDate': today,
-                  'address': departmentMessage.address
+                  'address': departmentMessage.address,
+                  'name': departmentMessage.name
                 }
                 UserRecord.updateOne({
                   'userId': userDependence[i]._id
