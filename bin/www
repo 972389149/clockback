@@ -208,36 +208,33 @@ async function update(year,month,day,hour,minute){
 
             }else{
               console.log(`可打卡信息已存在，不用插入`)
-              // console.log(canClock.canClock)
-              for(let i=0; i<canClock.canClock.length; i++){
-                if(canClock.canClock[i].deptId == departmentMessage._id.toString()){
-                  if(now > canClock.canClock[i].clockEnd){
-                    console.log(`可打卡信息过期，删除`)
-                    await new Promise((resolve, reject)=>{
-                      UserRecord.updateOne({
-                        'userId': userDependence[i]._id
-                      }, {
-                        "$pull": {'canClock': {'deptId': canClock.canClock[i].deptId}}
-                      }, (err)=>{
-                        if(err){
-                          reject(err);
-                        }else{
-                          resolve();
-                        }
+              if(canClock != null){
+                for(let i=0; i<canClock.canClock.length; i++){
+                  if(canClock.canClock[i].deptId == departmentMessage._id.toString()){
+                    if(now > canClock.canClock[i].clockEnd){
+                      console.log(`可打卡信息过期，删除`)
+                      await new Promise((resolve, reject)=>{
+                        UserRecord.updateOne({
+                          'userId': userDependence[i]._id
+                        }, {
+                          "$pull": {'canClock': {'deptId': canClock.canClock[i].deptId}}
+                        }, (err)=>{
+                          if(err){
+                            reject(err);
+                          }else{
+                            resolve();
+                          }
+                        })
                       })
-                    })
+                    }else{
+                      console.log(`可打卡信息没过期`)
+                      break;
+                    }
                   }else{
-                    console.log(`可打卡信息没过期`)
-                    break;
+                    continue;
                   }
-                }else{
-                  continue;
                 }
               }
-              // if(canClock.canClock.length; i++[{'deptId' == departmentMessage._id.toString()]){}
-
-
-              // resolve()
             }
           }
 
