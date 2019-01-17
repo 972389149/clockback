@@ -85,7 +85,7 @@ router.get('/getAbsenceClocked', (req, res, next)=>{
 })
 
 /* 用户打卡接口. */
-/* 参数 userId，deptId，adminId，clockStart，clockEnd，clockDate，clockTime，address，clockAddress. */
+/* 参数 id，userId，deptId，adminId，clockStart，clockEnd，clockDate，clockTime，address，clockAddress. */
 router.get('/clock', (req, res, next)=>{
 	clock(req, res, next).then((result)=>{
 		res.json({
@@ -115,6 +115,7 @@ async function clock(req, res, next){
 	 	 	'clockAddress': req.query.clockAddress
 		}
 		UserRecord.updateOne({
+		  '_id': mongoose.Types.ObjectId(req.query.id),
           'userId': req.query.userId
         }, {
           "$push":{"hasClocked": content}
