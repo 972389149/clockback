@@ -162,6 +162,7 @@ async function update(year,month,day,hour,minute){
               'hasClock.clockDate': today,
               'userId': userDependence[i]._id
             }).exec();
+            console.log(`${hasClockOrNot}:条件${departmentMessage._id.toString()}:${today}:${userDependence[i]._id}`);
             if(canClock == null && hasClockOrNot == null){
               console.log(`插入到可打卡`)
               await new Promise((resolve, reject)=>{
