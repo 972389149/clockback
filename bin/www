@@ -284,7 +284,12 @@ async function update(year,month,day,hour,minute){
           if(now > end){
             console.log(`超过打卡时间`);
             let absenceClocked = await UserRecord.findOne({'absenceClocked.deptId': departmentMessage._id.toString(),'userId': userDependence[i]._id}).exec();
-            if(absenceClocked == null){
+            let hasClockOrNot = await UserRecord.findOne({
+              'hasClock.deptId': departmentMessage._id.toString(),
+              'hasClock.clockDate': today,
+              'userId': userDependence[i]._id
+            }).exec();
+            if(absenceClocked == null && hasClockOrNot == null){
               console.log(`可插入到缺勤`)
               await new Promise((resolve, reject)=>{
                 let content = {
