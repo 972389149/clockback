@@ -158,8 +158,8 @@ async function update(year,month,day,hour,minute){
             console.log(`到达打卡时间`)
             let canClock = await UserRecord.findOne({'canClock.deptId': departmentMessage._id.toString(),'userId': userDependence[i]._id}).exec();
             let hasClockOrNot = await UserRecord.findOne({
-              'hasClock.deptId': departmentMessage._id.toString(),
-              'hasClock.clockDate': today,
+              'hasClocked.deptId': departmentMessage._id.toString(),
+              'hasClocked.clockDate': today,
               'userId': userDependence[i]._id
             }).exec();
             console.log(`${hasClockOrNot}:条件${departmentMessage._id.toString()}:${today}:${userDependence[i]._id}`);
