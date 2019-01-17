@@ -225,7 +225,12 @@ async function update(year,month,day,hour,minute){
           if(start > now){
             console.log(`未到打卡时间`);
             let waitClock = await UserRecord.findOne({'waitClock.deptId': departmentMessage._id.toString(),'userId': userDependence[i]._id}).exec();
-            if(waitClock == null){
+            let canClock = await UserRecord.findOne({
+              'canClock.deptId': departmentMessage._id.toString(),
+              'userId': userDependence[i]._id,
+              'clockDate': today
+            }).exec();
+            if(waitClock == null && canClock == null){
               console.log(`可插入到待打卡`)
               await new Promise((resolve, reject)=>{
                 let content = {
