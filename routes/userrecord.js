@@ -84,4 +84,88 @@ router.get('/getAbsenceClocked', (req, res, next)=>{
 	})
 })
 
+/* 用户打卡接口. */
+/* 参数 userId，deptId，adminId，clockStart，clockEnd，clockDate，clockTime，address，clockAddress. */
+router.get('/clock', (req, res, next)=>{
+	clock(req, res, next).then((result)=>{
+		res.json({
+			'status': '1',
+			'msg': '打卡成功',
+			'result': result
+		})
+	}, (err)=>{
+		res.json({
+			'status': '-1',
+			'msg': '打卡失败',
+			'result': err
+		})
+	})
+})
+async function clock(req, res, next){
+	// 添加到 用户打卡记录
+	await new Promise((resolve, reject)=>{
+		let content = {
+			'deptId': req.query.deptId,
+	 		'adminId': req.query.adminId,
+	 		'clockStart': req.query.clockStart,
+	 		'clockEnd': req.query.clockEnd,
+	 		'clockDate': req.query.clockDate,
+	 	 	'clockTime': req.query.clockTime,
+	 		'address': req.query.address,
+	 	 	'clockAddress': req.query.clockAddress
+		}
+		UserRecord.updateOne({
+          'userId': req.query.userId
+        }, {
+          "$push":{"hasClocked": content}
+        }, (err)=>{
+          if(err){
+            reject(err);
+          }else{
+            resolve();
+          }
+        })
+	})
+
+	// 从 可打卡中移除
+	await new Promise((resolve, reject)=>{
+		UserRecord.updateOne({
+	        'userId': req.query.userId
+	      }, {
+	        "$pull": {'canClock': {'deptId': req.query.deptId}}
+	      }, (err)=>{
+	        if(err){
+	          reject(err);
+	        }else{
+	          resolve();
+	        }
+	      })
+	})
+
+	// 添加到 部门的打卡记录
+	await new Promise((resolve, reject)=>{
+		let content = {
+            'userId': req.query.userId,
+	 		'clockDate': req.query.clockDate,
+	 		'clockStart': req.query.clockStart,
+	 		'clockEnd': req.query.clockEnd,
+	 		'clockTime': req.query.clockTime,
+	 		'clockAddress': req.query.clockAddress
+        }
+        DepartmentRecord.updateOne({
+          'deptId': req.query.deptId
+        }, {
+          "$push":{"hasClocked": content}
+        }, (err)=>{
+          if(err){
+            reject(err);
+          }else{
+            resolve();
+          }
+        })
+	})
+
+	return 1;
+}
+
 module.exports = router;

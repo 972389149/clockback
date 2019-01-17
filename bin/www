@@ -315,6 +315,20 @@ async function update(year,month,day,hour,minute){
               })
 
               await new Promise((resolve, reject)=>{
+                UserRecord.updateOne({
+                  'userId': userDependence[i]._id
+                }, {
+                  "$pull":{"canClock": {'deptId': departmentMessage._id.toString()}}
+                }, (err)=>{
+                  if(err){
+                    reject(err);
+                  }else{
+                    resolve();
+                  }
+                })
+              })
+
+              await new Promise((resolve, reject)=>{
                 let content = {
                   'clockStart': start,
                   'clockEnd': end,
