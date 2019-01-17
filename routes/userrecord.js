@@ -85,7 +85,7 @@ router.get('/getAbsenceClocked', (req, res, next)=>{
 })
 
 /* 用户打卡接口. */
-/* 参数 userId，deptId，adminId，clockStart，clockEnd，clockDate，clockTime，address，clockAddress. */
+/* 参数 userId，deptId，adminId，clockStart，clockEnd，clockDate，clockTime，address，clockAddress, name. */
 router.get('/clock', (req, res, next)=>{
 	clock(req, res, next).then((result)=>{
 		res.json({
@@ -107,6 +107,7 @@ async function clock(req, res, next){
 		let content = {
 			'deptId': req.query.deptId,
 	 		'adminId': req.query.adminId,
+	 		'name': req.query.name,
 	 		'clockStart': req.query.clockStart,
 	 		'clockEnd': req.query.clockEnd,
 	 		'clockDate': req.query.clockDate,
