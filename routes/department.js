@@ -4,6 +4,7 @@ const router = express.Router();
 const Department = require('../models/departments.js');
 const Administrator = require('../models/administrator.js');
 const DepartmentRecord = require('../models/departmentRecord.js');
+const User = require('../models/users.js');
 
 /* getOneGroup */
 /* 获取部门信息接口 */
@@ -191,7 +192,13 @@ router.post('/editGroup', (req, res, next)=>{
               'msg': '编辑成功',
               'result': ''
             });
-	})
+		}, (err)=>{
+			res.json({
+              'status': '-1',
+              'msg': '编辑异常',
+              'result': err
+            });
+		})
 	}else{
 		res.json({
 			'status': 0,
@@ -209,11 +216,7 @@ async function edit(req, res, next){
 			$set: {'departmentList.$.deptName': req.body.name}
 		},(err)=>{
 			if(err){
-	          res.json({
-	              'status': '-1',
-	              'msg': '编辑异常',
-	              'result': ''
-	            });
+	          reject(err);
 	        }
 	        resolve();
 		})
@@ -229,14 +232,25 @@ async function edit(req, res, next){
 	    		}
 	      }, (err) => {
 	        if(err){
-	          res.json({
-	              'status': '-1',
-	              'msg': '编辑异常',
-	              'result': ''
-	            });
+	          reject(err);
 	        }
 	        resolve();
 	      })
+	})
+
+	let result3 = await new Promise((resolve, reject)=>{
+		User.update({
+			'dependence.depdId':  req.body.id
+		},{
+			$set: {
+				'dependence.$.deptName': req.body.name
+			}	
+		}, (err)=>{
+			if(err){
+				reject(err);
+			}
+			resolve();
+		})
 	})
 	return 1;
 }
