@@ -243,7 +243,7 @@ async function edit(req, res, next){
 			'dependence.depdId':  req.body.id
 		},{
 			$set: {
-				'dependence.$.deptName': req.body.name
+				'dependence.$.depdName': req.body.name
 			}	
 		}, (err)=>{
 			if(err){
