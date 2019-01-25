@@ -280,6 +280,7 @@ async function update(year,month,day,hour,minute){
           // 缺勤
           if(now > end){
             console.log(`超过打卡时间`);
+            console.log(`${departmentMessage._id.toString()}:${today}:${userDependence[i]._id}`);
             let absenceClocked = await UserRecord.findOne({'absenceClocked.deptId': departmentMessage._id.toString(),'userId': userDependence[i]._id}).exec();
             let hasClockOrNot = await UserRecord.findOne({
               'hasClock.deptId': departmentMessage._id.toString(),
