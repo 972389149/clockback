@@ -283,8 +283,8 @@ async function update(year,month,day,hour,minute){
             console.log(`${departmentMessage._id.toString()}:${today}:${userDependence[i]._id}`);
             let absenceClocked = await UserRecord.findOne({'absenceClocked.deptId': departmentMessage._id.toString(),'userId': userDependence[i]._id}).exec();
             let hasClockOrNot = await UserRecord.findOne({
-              'hasClock.deptId': departmentMessage._id.toString(),
-              'hasClock.clockDate': today,
+              'hasClocked.deptId': departmentMessage._id.toString(),
+              'hasClocked.clockDate': today,
               'userId': userDependence[i]._id
             }).exec();
             if(absenceClocked == null && hasClockOrNot == null){
